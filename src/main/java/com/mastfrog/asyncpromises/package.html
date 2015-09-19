@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--
+The MIT License
+
+Copyright 2015 Tim Boudreau.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+<html>
+    <head>
+        <title>Async Promises API</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <h1>Async Promises API</h1>
+        <p>
+            Asynchronous promises use the "promise" idiom to handle the case where
+            the logic that does the work may be asynchronous and will not complete
+            synchronously.  The logic of an AsyncPromise is passed a "trigger" object 
+            which it will call when the work has either succeeded or failed.
+        </p>
+        <p>
+            The library makes no assumptions that it knows how to run the logic that
+            will be run - whatever it is simply calls the trigger when the work is
+            complete.  So it is suitable for making calls to external asynchronus
+            libraries where you don't control how or on what thread the subsequent
+            logic will be run.
+        </p>
+        <h2>Use Case</h2>
+        <p>
+            It is not uncommon to have more than one callback-based library to wire
+            together, or to have a sequence of asynchronous callbacks you want to
+            execute, with a guarantee that they are all executed or you get notified
+            in the case of failure.  In asynchronous libraries, it is common that they provide
+            the plumbing that actually runs your callback, so promises shouldn't
+            make an assumption that they can throw stuff in a thread pool to run
+            themselves.
+        </p>
+        <p>
+            This library can be used for synchronous promises as well - just call
+            the passed trigger's <code>trigger()</code> method synchronously for
+            that.
+        </p>
+        <h2>Usage</h2>
+        <p>
+            The basic way to use this library is to implement the class
+            <a href='Logic.html'>Logic</a> or
+            <a href='SimpleLogic.html'>SimpleLogic</a>, and pass that to 
+            the static <code>AsyncPromise.create()</code> method.  The Logic interface
+            is a <i>functional interface</i> which simply takes an input parameter
+            and a <i>trigger</i> and a <i>context</i> (see below), and does something,
+            which might be synchronous or asynchronous, but in either case, ends with
+            a call to the trigger object to provide the results and possibly trigger
+            the next promise to do something with that output, if running in a chain.
+        </p>
+        <p>
+            The logic will not actually be run until the Promise's <code>start()</code>
+            method is called (you pass it the initial input, which will be passed to your
+            Logic implementation).
+        </p>
+        <h2>Chaining</h2>
+        <p>
+            AsyncPromises can be chained together, and one can accept as input the output of
+            a previous one.  The result of chaining (using AsyncPromise's <code>then()</code>
+            method is a new AsyncPromise which takes the original one's input type as input,
+            and outputs the output type of the Logic or AsyncPromise instance you just passed.
+        </p>
+        <p>
+            So, if you start with:
+        </p>
+        <pre>
+            AsyncPromise&lt;A,B&gt;
+        </pre>
+        <p>
+            and call <code>then</code> on it with a new Logic or promise parameterized on B, C, you
+            get:
+        </p>
+        <pre>
+            AsyncPromise&lt;A,B&gt; first = ...;
+            AsyncPromise&lt;A,C&gt; chained = first.then(new Logic&lt;B, C&gt;() { ... });
+        </pre>
+        or using lambdas
+        <pre>
+            AsyncPromise&lt;A,C&gt; chained = first.then((B data, Trigger&lt;C&gt; next) -&gt; { ... });
+        </pre>
+        <p>
+            and when you call <code>first.start(someA)</code>, the first and second will be run
+            (you can pass an optional <code>Trigger</code> object to <code>start()</code> to
+            collect the final results).
+        </p>
+        <p>
+            If you want to chain together promises of heterogenous types, simply use the <code>then()</code>
+            method that takes an input argument:
+        </p>
+        <pre>
+            AsyncPromise&lt;A,B&gt; first = ...;
+            AsyncPromise&lt;B,C&gt; second = ...;
+            AsyncPromise&lt;Q,R&gt; third = ...;
+            AsyncPromise&lt;A,R&gt; chained = first.then(second).then(new Q(), third);
+        </pre>
+        and then to actually execute all of the logic in sequence,
+        <pre>
+            A a = ...;
+            chained.start(a);
+        </pre>
+        
+        <h2>Promise Context</h2>
+        <p>
+            The <a href='PromiseContext.html'>PromiseContext</a> provides a way for decoupled
+            Logic instances to communicate between themselves.  It is passed to Logic's method.
+            Key objects - PromiseContext.Key - are used to store and retrieve data from it.
+            The key instance must be known to both Logics:
+        </p>
+        <pre>
+            static Key&lt;String&gt; NAME_KEY = PromiseContext.key(String.class);
+
+            AsyncPromise&lt;A,B&gt;.create((A data, Trigger&lt;B&gt; trigger, PromiseContext context) -&gt; {
+                String interestingString = ...;
+                context.put(key, interestingString);
+                ...
+            });
+            AsyncPromise&lt;B,C&gt;.create((A data, Trigger&lt;C&gt; trigger, PromiseContext context) -&gt; {
+                String interestingString = context.get(NAME_KEY);
+                ...
+            });
+        </pre>
+        <h2>Failure Handling</h2>
+        <p>
+            The <a href="FailureHandler.html">FailureHandler</a> lets you handle errors that occured
+            during asynchronous processing.  So you can attach a FailureHandler to a promise, and it
+            will be notified in the case of failure.
+        </p>
+        <p>
+            When building a chain of promises, multiple failure handlers may be attached to different
+            steps in the promise;  on failure, the failure propagates backward to the nearest handler,
+            which can return <code>true</code> from its <code>onFailure</code> method to indictate
+            the failure should continue propagating backward to earlier failure handlers.
+        </p>
+        <p>
+            A failure consists of <i>either</i> passing a <code>Throwable</code> to the trigger, or
+            throwing an exception during logic execution.
+        </p>
+    </body>
+</html>
