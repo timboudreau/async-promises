@@ -5,6 +5,7 @@
         <groupId>com.mastfrog</groupId>
         <artifactId>giulius-parent</artifactId>
         <version>1.6.3</version>
+        <relativePath/>
     </parent>
     <artifactId>async-promises</artifactId>
     <packaging>jar</packaging>
