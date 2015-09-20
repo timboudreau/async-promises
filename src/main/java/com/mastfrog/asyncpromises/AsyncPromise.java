@@ -79,6 +79,16 @@ public abstract class AsyncPromise<T, R> {
     }
 
     /**
+     * Run the promise, using null as input (useful for instances whose
+     * first type parameter is void).
+     * 
+     * @return this
+     */
+    public final AsyncPromise<?, R> start() {
+        return start(null);
+    }
+    
+    /**
      * Use this key to attach the input to the promise context.  If set,
      * the input parameter will be automatically added to the context before
      * subsequent promises are called.
