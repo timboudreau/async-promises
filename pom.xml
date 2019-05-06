@@ -23,7 +23,10 @@
             </snapshots>
         </repository>
     </repositories>
-    <url>https://github.com/timboudreau/async-promises</url>
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com:timboudreau/async-promises/issues</url>
+    </issueManagement>
     <scm>
         <url>https://github.com/timboudreau/async-promises</url>
         <connection>scm:git:https://github.com/timboudreau/async-promises.git</connection>
