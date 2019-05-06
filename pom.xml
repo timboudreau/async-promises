@@ -8,6 +8,7 @@
         <relativePath/>
     </parent>
     <artifactId>async-promises</artifactId>
+    <url>https://github.com:timboudreau/async-promises</url>
     <repositories>
         <repository>
             <id>timboudreau-builds</id>
@@ -28,10 +29,11 @@
         <url>https://github.com:timboudreau/async-promises/issues</url>
     </issueManagement>
     <scm>
-        <url>https://github.com/timboudreau/async-promises</url>
-        <connection>scm:git:https://github.com/timboudreau/async-promises.git</connection>
-        <developerConnection>git@github.com/timboudreau/async-promises.git</developerConnection>
+        <url>git@github.com:timboudreau/async-promises.git</url>
+        <connection>scm:git:https://github.com:timboudreau/async-promises.git</connection>
+        <developerConnection>git@github.com:timboudreau/async-promises.git</developerConnection>
     </scm>
+    
     <organization>
         <name>Mastfrog Technologies</name>
         <url>https://mastfrog.com</url>
@@ -39,7 +41,8 @@
     <licenses>
         <license>
             <name>MIT</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
     <developers>
