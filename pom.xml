@@ -52,4 +52,9 @@
             <url>https://timboudreau.com</url>
         </developer>
     </developers>
-</project>
+<dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency></dependencies></project>
