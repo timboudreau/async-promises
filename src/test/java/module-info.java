@@ -2,4 +2,7 @@
 open module com.mastfrog.async.promises {
     exports com.mastfrog.asyncpromises;
 
+    // Inferred from test-source-scan
+    requires transitive junit;
+
 }
